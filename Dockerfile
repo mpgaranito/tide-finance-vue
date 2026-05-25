@@ -15,8 +15,8 @@ RUN npm run build
 ENV HOST=0.0.0.0
 ENV PORT=3000
 
-# Expõe a porta padrão do servidor TanStack Start / Vinxi
+# Expõe a porta padrão
 EXPOSE 3000
 
-# Inicia o servidor em modo de produção
-CMD ["npm", "run", "start"]
+# COMANDO ATUALIZADO: Ignora o package.json e chama o Vinxi direto
+CMD ["npx", "vinxi", "start"]
