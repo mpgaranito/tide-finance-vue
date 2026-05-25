@@ -1,18 +1,25 @@
-FROM node:20-alpine
+# Estágio 1: Build (Usando slim com suporte a glibc)
+FROM node:20-slim AS build
 WORKDIR /app
-
-# Instala as dependências globais
 COPY package*.json ./
 RUN npm install
-
-# Copia o resto do código
 COPY . .
-
-# Roda o build que gera o pacote da Cloudflare (dist/server)
 RUN npm run build
 
-# Expõe a porta que o k3s está esperando
+# Estágio 2: Execução
+FROM node:20-slim
+WORKDIR /app
+
+# Copia os arquivos necessários do estágio de build
+COPY --from=build /app/package*.json ./
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
+
+# A MÁGICA AQUI: Entra direto na pasta onde o wrangler.json e o servidor foram gerados
+WORKDIR /app/dist/server
+
+# Expõe a porta do k3s
 EXPOSE 3000
 
-# COMANDO CORRETO: Usa o wrangler para rodar o build localmente
+# Executa o Wrangler de dentro da pasta correta aceitando conexões externas
 CMD ["npx", "wrangler", "dev", "--ip", "0.0.0.0", "--port", "3000"]
