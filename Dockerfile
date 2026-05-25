@@ -1,29 +1,31 @@
-# Estágio 1: Build do Monorepo
+# Estágio 1: Build do projeto na Raiz (Onde funciona)
 FROM node:20-alpine AS build
 WORKDIR /app
-
-# 1. Copia os arquivos de configuração globais
 COPY package*.json ./
-COPY . .
-
-# 2. Instala as dependências na raiz E dentro do client
 RUN npm install
-RUN cd client && npm install
+COPY . .
+RUN npm run build
 
-# 3. Roda o build do Frontend (tentando pelo gerenciador do monorepo)
-RUN cd client && npm run build
+# Estágio 2: O Localizador (Procura o index.html dinamicamente)
+FROM alpine AS finder
+COPY --from=build /app /target
+RUN mkdir /html-ready && \
+    TARGET_DIR=$(find /target -name "index.html" -not -path "*/node_modules/*" -exec dirname {} \; | head -n 1) && \
+    if [ -n "$TARGET_DIR" ]; then \
+        echo "--> Sucesso! index.html encontrado em: $TARGET_DIR" && \
+        cp -r $TARGET_DIR/* /html-ready/; \
+    else \
+        echo "❌ ERRO: index.html não foi encontrado em lugar nenhum do build!" && exit 1; \
+    fi
 
-# Estágio 2: Servidor Nginx
+# Estágio 3: Servidor Nginx Final
 FROM nginx:alpine
-
-# Limpa a pasta padrão do Nginx
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copia EXCLUSIVAMENTE o conteúdo compilado do Vite
-# (Se o Vite salvou em client/dist, ele vai achar. Se salvou na raiz/dist, também)
-COPY --from=build /app/client/dist/ /usr/share/nginx/html/
+# Copia os arquivos que o Localizador isolou
+COPY --from=finder /html-ready /usr/share/nginx/html
 
-# Ajusta permissões
+# Ajusta permissões de leitura
 RUN chmod -R 755 /usr/share/nginx/html
 
 # Configuração para Single Page Application (SPA)
