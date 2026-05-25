@@ -1,31 +1,17 @@
-# Estágio 1: Build do Frontend
+# Estágio 1: Build do Monorepo
 FROM node:20-alpine AS build
 WORKDIR /app
 
-# Copia todo o projeto
+# 1. Copia os arquivos de configuração globais
+COPY package*.json ./
 COPY . .
 
-# Entra na pasta do cliente e roda o build
-WORKDIR /app/client
+# 2. Instala as dependências na raiz E dentro do client
 RUN npm install
-RUN npm run build
+RUN cd client && npm install
 
-# SCRIPT INTELIGENTE: Detecta onde os arquivos compilados foram parar e centraliza
-RUN mkdir -p /app/html-ready && \
-    if [ -d "/app/client/dist" ] && [ "$(ls -A /app/client/dist)" ]; then \
-        echo "--> Detectado: client/dist" && cp -r /app/client/dist/* /app/html-ready/; \
-    elif [ -d "/app/dist" ] && [ "$(ls -A /app/dist)" ]; then \
-        echo "--> Detectado: raiz/dist" && cp -r /app/dist/* /app/html-ready/; \
-    elif [ -d "/app/client/build" ] && [ "$(ls -A /app/client/build)" ]; then \
-        echo "--> Detectado: client/build" && cp -r /app/client/build/* /app/html-ready/; \
-    elif [ -d "/app/server/public" ] && [ "$(ls -A /app/server/public)" ]; then \
-        echo "--> Detectado: server/public" && cp -r /app/server/public/* /app/html-ready/; \
-    else \
-        echo "❌ ERRO: Nenhuma pasta de build foi encontrada! Listando estrutura para diagnóstico:" && \
-        echo "=== RAIZ DEL PROJETO ===" && ls -la /app && \
-        echo "=== PASTA CLIENT ===" && ls -la /app/client && \
-        exit 1; \
-    fi
+# 3. Roda o build do Frontend (tentando pelo gerenciador do monorepo)
+RUN cd client && npm run build
 
 # Estágio 2: Servidor Nginx
 FROM nginx:alpine
@@ -33,8 +19,9 @@ FROM nginx:alpine
 # Limpa a pasta padrão do Nginx
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copia os arquivos da pasta centralizada pelo script acima
-COPY --from=build /app/html-ready /usr/share/nginx/html
+# Copia EXCLUSIVAMENTE o conteúdo compilado do Vite
+# (Se o Vite salvou em client/dist, ele vai achar. Se salvou na raiz/dist, também)
+COPY --from=build /app/client/dist/ /usr/share/nginx/html/
 
 # Ajusta permissões
 RUN chmod -R 755 /usr/share/nginx/html
