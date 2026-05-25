@@ -16,7 +16,7 @@ interface AppCtx {
 
 const Ctx = createContext<AppCtx | null>(null);
 
-export function AppProvider({ children }: { children: React.ReactNode }) {
+export function AppProvider({ children }: { readonly children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [transactions, setTransactions] = useState<Transaction[]>([]);

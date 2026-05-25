@@ -34,7 +34,7 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: { readonly error: Error; readonly reset: () => void }) {
   console.error(error);
   const router = useRouter();
 
@@ -70,40 +70,20 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Flow Finance is a modern, responsive financial control application for managing income and expenses." },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Flow Finance is a modern, responsive financial control application for managing income and expenses." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "Lovable App" },
-      { name: "twitter:description", content: "Flow Finance is a modern, responsive financial control application for managing income and expenses." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/4cd3dd4a-f494-4838-8db2-3eb92f5bf13c/id-preview-d2ad36e5--7e92e95e-d4f4-43b9-abf5-cf35d702b626.lovable.app-1779666421634.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/4cd3dd4a-f494-4838-8db2-3eb92f5bf13c/id-preview-d2ad36e5--7e92e95e-d4f4-43b9-abf5-cf35d702b626.lovable.app-1779666421634.png" },
-    ],
-    links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
-    ],
-  }),
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
 
-function RootShell({ children }: { children: React.ReactNode }) {
+function RootShell({ children }: { readonly children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Tide Finance</title>
+        <link rel="stylesheet" href={appCss} />
         <HeadContent />
       </head>
       <body>

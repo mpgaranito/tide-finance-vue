@@ -12,4 +12,11 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
+  vite: {
+    resolve: {
+      alias: {
+        'tanstack-start-injected-head-scripts:v': new URL('./src/virtual-modules.ts', import.meta.url).pathname,
+      },
+    },
+  },
 });

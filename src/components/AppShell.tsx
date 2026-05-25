@@ -11,7 +11,7 @@ const nav = [
   { to: "/settings", label: "Configurações", icon: SettingsIcon },
 ] as const;
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({ children }: { readonly children: React.ReactNode }) {
   const { user, logout } = useApp();
   const loc = useLocation();
   const nav2 = useNavigate();
