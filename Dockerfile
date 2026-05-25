@@ -1,22 +1,18 @@
 FROM node:20-alpine
 WORKDIR /app
 
-# Copia os arquivos de dependências
+# Instala as dependências globais
 COPY package*.json ./
 RUN npm install
 
 # Copia o resto do código
 COPY . .
 
-# Roda o build do TanStack Start
+# Roda o build que gera o pacote da Cloudflare (dist/server)
 RUN npm run build
 
-# Configura as variáveis de ambiente para o servidor aceitar conexões externas
-ENV HOST=0.0.0.0
-ENV PORT=3000
-
-# Expõe a porta padrão
+# Expõe a porta que o k3s está esperando
 EXPOSE 3000
 
-# COMANDO ATUALIZADO: Ignora o package.json e chama o Vinxi direto
-CMD ["npx", "vinxi", "start"]
+# COMANDO CORRETO: Usa o wrangler para rodar o build localmente
+CMD ["npx", "wrangler", "dev", "--ip", "0.0.0.0", "--port", "3000"]
