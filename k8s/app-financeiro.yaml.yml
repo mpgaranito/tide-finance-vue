@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: financas-cloud
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: financas-cloud
+  template:
+    metadata:
+      labels:
+        app: financas-cloud
+    spec:
+      containers:
+      - name: frontend
+        image: ghcr.io/mpgaranito/tide-finance-vue:latest # Altetrar aqui!
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: financas-cloud-service
+  namespace: default
+spec:
+  selector:
+    app: financas-cloud
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: financas-cloud-ingress
+  namespace: default
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: "false" # Mude para true se tiver SSL cert-manager
+spec:
+  ingressClassName: traefik # Ingress padrão do K3s
+  rules:
+  - host: financas.homelab.local # Altere para o seu domínio local do homelab
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: financas-cloud-service
+            port:
+              number: 80
