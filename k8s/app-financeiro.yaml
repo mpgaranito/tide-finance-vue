@@ -4,7 +4,7 @@ metadata:
   name: financas-cloud
   namespace: default
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: financas-cloud
@@ -15,10 +15,10 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: ghcr.io/mpgaranito/tide-finance-vue:latest # Altetrar aqui!
+        image: ghcr.io/mpgaranito/tide-finance-vue:latest
         imagePullPolicy: Always
         ports:
-        - containerPort: 80
+        - containerPort: 3000 # <-- Mudou aqui para 3000
 ---
 apiVersion: v1
 kind: Service
@@ -31,7 +31,7 @@ spec:
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 80
+      targetPort: 3000 # <-- Mudou aqui para 3000 (O Service recebe na 80 e joga na 3000 do container)
   type: ClusterIP
 ---
 apiVersion: networking.k8s.io/v1
@@ -39,12 +39,10 @@ kind: Ingress
 metadata:
   name: financas-cloud-ingress
   namespace: default
-  annotations:
-    ingress.kubernetes.io/ssl-redirect: "false" # Mude para true se tiver SSL cert-manager
 spec:
-  ingressClassName: traefik # Ingress padrão do K3s
+  ingressClassName: traefik
   rules:
-  - host: financas.homelab.local # Altere para o seu domínio local do homelab
+  - host: financas.homelab.local
     http:
       paths:
       - path: /
@@ -53,4 +51,4 @@ spec:
           service:
             name: financas-cloud-service
             port:
-              number: 80
+              number: 80 # Mantém 80 aqui, porque o Service atende na 80

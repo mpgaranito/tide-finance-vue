@@ -1,23 +1,22 @@
-# Estágio 1: Build e Diagnóstico
-FROM node:20-alpine AS build
+FROM node:20-alpine
 WORKDIR /app
 
-# Copia os arquivos do projeto
-COPY . .
-
-# Instala as dependências globais
+# Copia os arquivos de dependências
+COPY package*.json ./
 RUN npm install
 
-# 1. IMPRIME O SCRIPT DO SEU PROJETO NO LOG
-RUN echo "=== CONTEÚDO DO PACKAGE.JSON DA RAIZ ===" && cat package.json || echo "Sem package.json na raiz"
-RUN echo "=== CONTEÚDO DO PACKAGE.JSON DO CLIENT ===" && cat client/package.json || echo "Sem package.json no client"
+# Copia o resto do código
+COPY . .
 
-# Roda o build padrão
+# Roda o build do TanStack Start
 RUN npm run build
 
-# 2. MAPEIA ONDE OS ARQUIVOS FORAM PARAR
-RUN echo "=== MAPA DE ARQUIVOS GERADOS APÓS O BUILD ===" && \
-    find . -maxdepth 4 -not -path "*/node_modules/*" -not -path "*/.git/*"
+# Configura as variáveis de ambiente para o servidor aceitar conexões externas
+ENV HOST=0.0.0.0
+ENV PORT=3000
 
-# Força o build a parar aqui para podermos ler o log no GitHub
-RUN echo "❌ Pausa de diagnóstico ativada. Olhe o log acima!" && exit 1
+# Expõe a porta padrão do servidor TanStack Start / Vinxi
+EXPOSE 3000
+
+# Inicia o servidor em modo de produção
+CMD ["npm", "run", "start"]
