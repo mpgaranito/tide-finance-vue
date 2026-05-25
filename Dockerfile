@@ -1,11 +1,23 @@
-| >>>     TARGET_DIR=$(find /target -name "index.html" -not -path "*/node_modules/*" -exec dirname {} \; | head -n 1) && \
-  14 | >>>     if [ -n "$TARGET_DIR" ]; then \
-  15 | >>>         echo "--> Sucesso! index.html encontrado em: $TARGET_DIR" && \
-  16 | >>>         cp -r $TARGET_DIR/* /html-ready/; \
-  17 | >>>     else \
-  18 | >>>         echo "❌ ERRO: index.html não foi encontrado em lugar nenhum do build!" && exit 1; \
-  19 | >>>     fi
-  20 |     
---------------------
-ERROR: failed to build: failed to solve: process "/bin/sh -c mkdir /html-ready &&     TARGET_DIR=$(find /target -name \"index.html\" -not -path \"*/node_modules/*\" -exec dirname {} \\; | head -n 1) &&     if [ -n \"$TARGET_DIR\" ]; then         echo \"--> Sucesso! index.html encontrado em: $TARGET_DIR\" &&         cp -r $TARGET_DIR/* /html-ready/;     else         echo \"❌ ERRO: index.html não foi encontrado em lugar nenhum do build!\" && exit 1;     fi" did not complete successfully: exit code: 1
-Error: buildx failed with: ERROR: failed to build: failed to solve: process "/bin/sh -c mkdir /html-ready &&     TARGET_DIR=$(find /target -name \"index.html\" -not -path \"*/node_modules/*\" -exec dirname {} \\; | head -n 1) &&     if [ -n \"$TARGET_DIR\" ]; then         echo \"--> Sucesso! index.html encontrado em: $TARGET_DIR\" &&         cp -r $TARGET_DIR/* /html-ready/;     else         echo \"❌ ERRO: index.html não foi encontrado em lugar nenhum do build!\" && exit 1;     fi" did not complete successfully: exit code: 1
+# Estágio 1: Build e Diagnóstico
+FROM node:20-alpine AS build
+WORKDIR /app
+
+# Copia os arquivos do projeto
+COPY . .
+
+# Instala as dependências globais
+RUN npm install
+
+# 1. IMPRIME O SCRIPT DO SEU PROJETO NO LOG
+RUN echo "=== CONTEÚDO DO PACKAGE.JSON DA RAIZ ===" && cat package.json || echo "Sem package.json na raiz"
+RUN echo "=== CONTEÚDO DO PACKAGE.JSON DO CLIENT ===" && cat client/package.json || echo "Sem package.json no client"
+
+# Roda o build padrão
+RUN npm run build
+
+# 2. MAPEIA ONDE OS ARQUIVOS FORAM PARAR
+RUN echo "=== MAPA DE ARQUIVOS GERADOS APÓS O BUILD ===" && \
+    find . -maxdepth 4 -not -path "*/node_modules/*" -not -path "*/.git/*"
+
+# Força o build a parar aqui para podermos ler o log no GitHub
+RUN echo "❌ Pausa de diagnóstico ativada. Olhe o log acima!" && exit 1
